@@ -1,0 +1,117 @@
+
+```{r}
+.libPaths(c("~/R/x86_64-pc-linux-gnu-library/4.3/"))
+library(ncvreg)
+library(caret)
+```
+
+```{r}
+load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_Y_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_X_DWMC1.1_07112022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_Y_DWMC1.1_07112022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Models/model1_ktsp.RData")
+```
+
+```{r}
+modell <- kTSP_01042023_model2
+# modell <- kTSP_12212022
+```
+
+
+```{r}
+# function by Naim
+ind_fun = function(train_sub, classifier){
+  indmat = matrix(-1, ncol(train_sub), nrow(classifier$TSPs))
+  for(i in 1:nrow(classifier$TSPs)){
+    p1 = which(rownames(train_sub) == classifier$TSPs[i,1])
+    p2 = which(rownames(train_sub) == classifier$TSPs[i,2])
+    indmat[,i] = (train_sub[p1,] > train_sub[p2,])^2
+  }
+  indmat = t(indmat)
+  #rownames(indmat) = apply(classifier$TSPs, 1, paste)
+  colnames(indmat) = colnames(train_sub)
+  return(indmat)
+}
+
+names <- c("p1","p2","p3","p4","p5","p6","p7","p8","p9","p10")[1:nrow(modell$TSPs)]
+names
+
+TCGA_ind <- ind_fun(X_SSC,modell)
+bailey_ind <- ind_fun(bailey_X_SSC,modell)
+
+rownames(TCGA_ind) <- names
+rownames(bailey_ind)<- names
+```
+
+```{r}
+cvfit <- cv.ncvreg(X = t(TCGA_ind), y = Y_SSC, nfolds = 100, family='binomial', 
+                   alpha=0.5)
+summary(cvfit)
+plot(cvfit)
+lamval <- cvfit$lambda.min
+lamval
+coef(cvfit)
+
+# ncvfit <- ncvreg(X=t(TCGA_ind),y=Y_SSC,family="binomial",penalty="MCP",
+#                       gamma=3,alpha=0.5,nlambda=length(cvfit$lambda),
+#                       lambda=cvfit$lambda)
+
+# plr_mystic1 <- ncvreg(X=t(TCGA_ind),y=Y_SSC,family="binomial",penalty="MCP",
+#                       gamma=3,alpha=0.5,nlambda=length(cvfit$lambda),
+#                       lambda=cvfit$lambda)
+# summary(plr_mystic1,lambda = lamval)
+# plot(plr_mystic1)
+# plr_mystic1$lambda.min
+# coef(plr_mystic1)
+```
+
+```{r}
+# ncvfit <- ncvreg(X=t(TCGA_ind),y=Y_SSC,family="binomial",penalty="MCP",alpha=0.5)
+# summary(ncvfit, lambda=ncvfit$lambda.min)
+# plot(ncvfit)
+# lamval <- ncvfit$lambda.min
+# lamval
+# coef(ncvfit)
+```
+
+
+```{r}
+preds <- predict(object=cvfit, X=t(bailey_ind), type="response",
+                 lambda=cvfit$lambda.min)
+preds
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(1,0))
+calls_basal
+# cf <- confusionMatrix(calls_basal, bailey_Y_SSC, positive = "1")
+# cf
+# measures <- cf$byClass
+# measures
+# acc <- cf$byClass[11]
+# acc
+
+# save(cvfit, file="/proj/jjyehlab/users/tylerben/mystic/Models/model1_PLR.RData")
+```
+
+```{r}
+cf <- confusionMatrix(calls_basal, bailey_Y_SSC, positive = "1")
+cf
+```
+
+
+```{r}
+# data(Heart)
+# 
+# fit <- ncvreg(Heart$X, Heart$y, family="binomial")
+# coef(fit, lambda=0.05)
+# head(predict(fit, Heart$X, type="link", lambda=0.05))
+# head(predict(fit, Heart$X, type="response", lambda=0.05))
+# head(predict(fit, Heart$X, type="class", lambda=0.05))
+# predict(fit, type="vars", lambda=c(0.05, 0.01))
+# predict(fit, type="nvars", lambda=c(0.05, 0.01))
+```
+
+
+
+
+
+
