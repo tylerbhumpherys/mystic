@@ -1,7 +1,7 @@
 library(switchBox)
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/melted_zach1125.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_Y_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData")
 targets <- c(unique(melted_zach1125$Target), 2,9,11,15)
 probeID <- c("cg01273330",
              "cg10687219",

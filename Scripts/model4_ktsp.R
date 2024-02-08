@@ -1,6 +1,6 @@
 library(switchBox)
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_Y_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData")
 
 remove <- c("cg23902076","cg26155983","cg10581876","cg06033488","cg25393429")
 x_filt <- X_SSC[!(rownames(X_SSC) %in% remove), ]

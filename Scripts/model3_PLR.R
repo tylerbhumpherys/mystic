@@ -1,9 +1,9 @@
 library(ncvreg)
 library(caret)
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_Y_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_X_DWMC1.1_07112022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_Y_DWMC1.1_07112022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/bailey_Y_DWMC1.1_07112022_refactor.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Models/model3_ktsp.RData")
 
 # modell <- kTSP_01042023_model2
@@ -28,13 +28,38 @@ bailey_ind <- ind_fun(bailey_X_SSC,modell)
 rownames(TCGA_ind) <- names
 rownames(bailey_ind)<- names
 
-cvfit <- cv.ncvreg(X = t(TCGA_ind), y = Y_SSC, nfolds = 100, family='binomial', 
-                   alpha=0.5)
+# specify range for alpha using training set data
+alphas = c(0.001, 0.01, 0.05, 0.25, 0.5, 0.75, 0.9, 1)
 
+# vector to hold cross validated PE
+pe = rep(NA, length(alphas))
+
+for(i in seq_along(alphas)){
+  
+  # fit model with alpha value
+  cvfit <- suppressWarnings(cv.ncvreg(X = t(TCGA_ind), y = Y_SSC,
+                                      nfolds = length(Y_SSC),
+                                      family='binomial', alpha = alphas[i]))
+  
+  # get cross-validated prediction error on training set
+  pe[i] = cvfit$pe[cvfit$min]
+  
+}
+
+# rerun model with best alpha
+cvfit <- cv.ncvreg(X = t(TCGA_ind), y = Y_SSC, nfolds = 100, family='binomial', 
+                   alpha = alphas[which.min(pe)])
+
+# save model
+save(cvfit, file="/proj/jjyehlab/users/tylerben/mystic/Models/model3_PLR.RData")
+
+## apply to test set
 preds <- predict(object=cvfit, X=t(bailey_ind), type="response",
                  lambda=cvfit$lambda.min)
-calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(1,0))
 
+# get calls
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(0,1))
+
+# estimate kappa on training set
 cf <- confusionMatrix(calls_basal, bailey_Y_SSC, positive = "1")
 cf
-save(cvfit, file="/proj/jjyehlab/users/tylerben/mystic/Models/model3_PLR.RData")

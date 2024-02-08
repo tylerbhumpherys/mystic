@@ -1,8 +1,8 @@
 library(rtemis)
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_Y_DWMC1.1_07082022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_X_DWMC1.1_07112022.RData")
-load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_Y_DWMC1.1_07112022.RData")
+load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/bailey_Y_DWMC1.1_07112022_refactor.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Models/model3_ktsp.RData")
 
 # modell <- kTSP_01042023_model2
