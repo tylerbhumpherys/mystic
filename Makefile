@@ -126,7 +126,7 @@ Figures/model2_heatmaps.pdf: Scripts/model2_heatmaps.R \
 	
 Figures/model3_heatmaps.pdf: Scripts/model3_heatmaps.R \
 	Source_data/TCGA_X_DWMC1.1_07082022.RData \
-	Source_data/TCGA_Y_DWMC1.1_07082022_refactor.RData \
+	Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData \
 	Source_data/bailey_X_DWMC1.1_07112022.RData \
 	Generated_data/bailey_Y_DWMC1.1_07112022_refactor.RData \
 	Source_data/PACA_AU_seq_plus04202021.RData \
