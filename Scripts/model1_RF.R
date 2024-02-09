@@ -1,4 +1,5 @@
 library(rtemis)
+library(caret)
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/TCGA_X_DWMC1.1_07082022.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Generated_data/TCGA_Y_DWMC1.1_07082022_refactor.RData")
 load("/proj/jjyehlab/users/tylerben/mystic/Source_data/bailey_X_DWMC1.1_07112022.RData")
@@ -16,19 +17,20 @@ ind_fun = function(train_sub, classifier){
     indmat[,i] = (train_sub[p1,] > train_sub[p2,])^2
   }
   indmat = t(indmat)
-  #rownames(indmat) = apply(classifier$TSPs, 1, paste)
+  # rownames(indmat) = apply(classifier$TSPs, 1, paste)
   colnames(indmat) = colnames(train_sub)
   return(indmat)
 }
 
-names <- c("p1","p2","p3","p4","p5","p6","p7","p8","p9","p10")[1:nrow(modell$TSPs)]
-
 TCGA_ind <- ind_fun(X_SSC,modell)
 bailey_ind <- ind_fun(bailey_X_SSC,modell)
-
+names <- gsub(",", "_", rownames(modell$TSPs))
 rownames(TCGA_ind) <- names
-rownames(bailey_ind)<- names
+rownames(bailey_ind) <- names
 
-mystic2 <- s_Ranger(x=t(TCGA_ind), y=Y_SSC, x.test=t(bailey_ind), y.test=bailey_Y_SSC, n.trees = 10000, ipw = TRUE, ipw.case.weights =TRUE, ipw.class.weights = FALSE,  print.plot = TRUE, verbose=TRUE, probability = TRUE)
+mystic2 <- s_Ranger(x=t(TCGA_ind), y=Y_SSC, x.test=t(bailey_ind), y.test=bailey_Y_SSC, n.trees = 10000, ipw = TRUE, ipw.case.weights =TRUE, ipw.class.weights = FALSE,  print.plot = TRUE, verbose=TRUE, probability = TRUE, autotune = TRUE, importance = "impurity")
 
 save(mystic2, file="/proj/jjyehlab/users/tylerben/mystic/Models/model1_RF.RData")
+
+cf <- confusionMatrix(mystic2$predicted, bailey_Y_SSC, positive = "1")
+cf
