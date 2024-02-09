@@ -7,6 +7,6 @@ x_filt <- X_SSC[!(rownames(X_SSC) %in% remove), ]
 Train_X_SSC <- as.matrix(x_filt)
 Train_Y_SSC <- Y_SSC
 
-kTSP_12212022 <- SWAP.Train.KTSP(inputMat=Train_X_SSC, phenoGroup=Train_Y_SSC,classes = c("1","0"), FilterFunc=NULL, krange=c(1:10),disjoint=T)
+kTSP_12212022 <- SWAP.Train.KTSP(inputMat=Train_X_SSC, phenoGroup=Train_Y_SSC,classes = c("1","0"), FilterFunc=NULL, krange=c(1:25),disjoint=T)
 save(kTSP_12212022, file = "/proj/jjyehlab/users/tylerben/mystic/Models/model4_ktsp.RData")
 
