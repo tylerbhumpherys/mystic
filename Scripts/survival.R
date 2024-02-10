@@ -22,7 +22,7 @@ mystic_model <- loadRData(paste0("Models/model", model_number, "_RF.RData"))
 probes_mystic <- c(kTSP_model$TSPs[,1],kTSP_model$TSPs[,2])
 MYSTIC <- as.vector(ifelse(mystic_model$fitted == 1, "basal-like","classical"))
 metadata <- tcga_gencode$sampInfo
-samples <- colnames(X_SSC)
+samples <- colnames(train_x)
 metadata_samples <- metadata[which((metadata$Tumor.Sample.ID %in% samples)&(!(metadata$survival_months=="NaN"))),]
 
 metadata_samples$mystic_fit <- mystic_model$fitted[match(metadata_samples$Tumor.Sample.ID,samples)]
@@ -80,7 +80,29 @@ plot
 
 km_fit
 
-samples <- colnames(bailey_X_SSC)
+png_file <- paste("Figures/survivalCurve_TCGA_model",model_number,".png",sep="")
+png(png_file)
+
+p = coxph(km ~ mystic_fit, data = survDat)
+bic = round(BIC(p),3)
+hr <- round(1/summary(p)$coefficients[2],3)
+km_fit <- survfit(km ~ mystic_fit, data = survDat, type = "kaplan-meier")
+plot <- ggsurvplot(km_fit, conf.int = F, pval = T,
+                   legend.labs=c("Basal-like","Classical"),
+                   legend.title="",break.time.by = 12,
+                   palette = c("orange","blue"),
+                   xlab = "Time (months)", risk.table = T,
+                   title = paste("TCGA_PAAD - MYSTIC (BIC=",
+                                 bic,")",
+                                 "\nB vs C HR=",hr,sep=""))
+plot
+
+#dev.off()
+#plot
+
+km_fit
+
+samples <- colnames(test_x)
 MYSTIC <- as.vector(ifelse(mystic_model$predicted == 1, "basal-like","classical"))
 
 beta2M <- function(x){
@@ -111,7 +133,7 @@ bailey_table$Sex <- meta_data_bailey$Gender[match(bailey_table$DonorID,meta_data
 bailey_table$time <- meta_data_bailey$survival_months[match(bailey_table$DonorID,meta_data_bailey$icgc_donor_id)]
 bailey_table$censored <- meta_data_bailey$censored[match(bailey_table$DonorID,meta_data_bailey$icgc_donor_id)]
 
-all.equal(bailey_table$MethylationSpecimenID,colnames(bailey_X_SSC))
+all.equal(bailey_table$MethylationSpecimenID,colnames(test_x))
 all.equal(bailey_table$DonorID,donors_vec)
 #bailey_RF_0015_ktsp_perf <- summary(rf_0015_196_ktsp_20)
 
@@ -165,6 +187,27 @@ km <- with(survDat, Surv(time,status))
 
 pdf_file <- paste("Figures/survivalCurve_Bailey_model",model_number,".pdf",sep="")
 pdf(pdf_file, height = 5,width=7)
+
+p = coxph(km ~ MYSTIC, data = survDat)
+bic = round(BIC(p),3)
+hr <- round(1/summary(p)$coefficients[2],3)
+km_fit <- survfit(km ~ MYSTIC, data = survDat, type = "kaplan-meier")
+plot <- ggsurvplot(km_fit, conf.int = F, pval = T,
+                   legend.labs=c("Basal-like","Classical"),
+                   legend.title="",break.time.by = 12,
+                   palette = c("orange","blue"),
+                   xlab = "Time (months)", risk.table = T,
+                   title = paste("Bailey - MYSTIC (BIC=",
+                                 bic,")",
+                                 "\nB vs C HR=",hr,sep=""))
+plot
+#dev.off()
+#plot
+
+km_fit
+
+png_file <- paste("Figures/survivalCurve_Bailey_model",model_number,".png",sep="")
+png(png_file)
 
 p = coxph(km ~ MYSTIC, data = survDat)
 bic = round(BIC(p),3)

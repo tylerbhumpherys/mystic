@@ -22,11 +22,11 @@ mystic_model <- loadRData(paste0("Models/model", model_number, "_RF.RData"))
 probes_mystic <- c(kTSP_model$TSPs[,1],kTSP_model$TSPs[,2])
 MYSTIC <- as.vector(ifelse(mystic_model$fitted == 1, "basal-like","classical"))
 row_order <- unique(c(rbind(kTSP_model$TSPs[,1],kTSP_model$TSPs[,2])))
-samples <- colnames(X_SSC)
+samples <- colnames(train_x)
 metadata <- tcga_gencode$sampInfo
 metadata_samples <- metadata[which(metadata$Tumor.Sample.ID %in% samples),]
 
-ssc <- ifelse(Y_SSC == 1,"basal-like","classical")
+ssc <- ifelse(train_y == 1,"basal-like","classical")
 collison <- metadata_samples$cluster.Collisson.scaled
 bailey <- metadata_samples$cluster.Bailey.scaled
 moffitt <- metadata_samples$cluster.MT.unscaled.Mar19
@@ -36,7 +36,7 @@ bailey[which(bailey == "Squamous")] <- "squamous"
 bailey[which(bailey == "Immunogenic")] <- "immunogenic"
 bailey[which(bailey == "PancreaticProgenitor")] <- "pancreaticprogenitor"
 
-m_top <- X_SSC[probes_mystic,]
+m_top <- train_x[probes_mystic,]
 m_top<- m_top[!row.names(m_top) %in% c("cg06033488.1"),]
 
 col <- list(PurIST = c("basal-like" = "orange", "classical" = "blue"), 
@@ -69,11 +69,25 @@ Heatmap(as.matrix(m_top),top_annotation = ha,show_column_names=F,
         show_row_names=T,name="M-value",clustering_distance_rows="euclidean",
         col=coul,column_order=column_order)
 dev.off()
+png_file <- paste("Figures/heatmap_TCGA_clustered_allsubtyping_model",
+                  model_number,".png",sep="")
+png(png_file)
+Heatmap(as.matrix(m_top),top_annotation = ha,show_column_names=F,
+        show_row_names=T,name="M-value",clustering_distance_rows="euclidean",
+        col=coul,column_order=column_order)
+dev.off()
 
 # make TCGA ordered heatmap 
 pdf_file <- paste("Figures/heatmap_TCGA_kTSP-orderd_allsubtyping_model",
                   model_number,".pdf",sep="")
 pdf(pdf_file, height = 5,width=7)
+Heatmap(as.matrix(m_top[,column_order]),top_annotation = ha,
+        show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,
+        col=coul,row_order = row_order,column_order = column_order)
+dev.off()
+png_file <- paste("Figures/heatmap_TCGA_kTSP-orderd_allsubtyping_model",
+                  model_number,".png",sep="")
+png(png_file)
 Heatmap(as.matrix(m_top[,column_order]),top_annotation = ha,
         show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,
         col=coul,row_order = row_order,column_order = column_order)
@@ -105,10 +119,10 @@ typecounts <- as.vector(summary(spec_info$tumour_histological_type[which(spec_in
 # m_value_matrix_testingSamples_bailey <- m_value_matrix_bailey_tumors[,testing_specs_bailey]
 bailey_chosen_metadata <- meta_data_bailey[match(donors_vec,meta_data_bailey$icgc_donor_id),]
 
-samples <- colnames(bailey_X_SSC)
+samples <- colnames(test_x)
 MYSTIC <- as.vector(ifelse(mystic_model$predicted == 1, "basal-like","classical"))
 
-ssc <- ifelse(bailey_Y_SSC == 1,"basal-like","classical")
+ssc <- ifelse(test_y == 1,"basal-like","classical")
 collison <- bailey_chosen_metadata$cluster.Collisson.scaled
 bailey <- bailey_chosen_metadata$cluster.Bailey.scaled
 moffitt <- bailey_chosen_metadata$cluster.MT.unscaled.Mar19
@@ -118,7 +132,7 @@ bailey[which(bailey == "Squamous")] <- "squamous"
 bailey[which(bailey == "Immunogenic")] <- "immunogenic"
 bailey[which(bailey == "PancreaticProgenitor")] <- "pancreaticprogenitor"
 
-m_top <- bailey_X_SSC[probes_mystic,]
+m_top <- test_x[probes_mystic,]
 m_top<- m_top[!row.names(m_top) %in% c("cg06033488.1"),]
 col <- list(PurIST = c("basal-like" = "orange", "classical" = "blue"), Collisson= c("QM"= "mediumorchid3", "classical"="lightblue","exocrine-like"="seagreen4"), Bailey= c("ADEX"= "mediumpurple3", "immunogenic"="red","pancreaticprogenitor"="lightsteelblue2","squamous"="gold1"),Moffitt = c("basal-like" = "darkorange3", "classical" = "darkblue"), MYSTIC = c("classical"= "lightseagreen","basal-like"="deeppink4"))
 
@@ -137,6 +151,10 @@ pdf_file <- paste("Figures/heatmap_bailey_clustered_mystic_allsubtyping_model",m
 pdf(pdf_file, height = 5,width=7)
 Heatmap(as.matrix(m_top),top_annotation = ha,show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,clustering_distance_rows = "euclidean" ,col=coul,column_order=column_order)
 dev.off()
+png_file <- paste("Figures/heatmap_bailey_clustered_mystic_allsubtyping_model",model_number,".png",sep="")
+png(png_file)
+Heatmap(as.matrix(m_top),top_annotation = ha,show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,clustering_distance_rows = "euclidean" ,col=coul,column_order=column_order)
+dev.off()
 
 # side_annotation <- rowAnnotation(
 #   PurIST = ssc,
@@ -149,5 +167,9 @@ dev.off()
 
 pdf_file <- paste("Figures/heatmap_bailey_kTSP-orderd_mystic_allsubtyping_model",model_number,".pdf",sep="")
 pdf(pdf_file, height = 5,width=7)
+Heatmap(as.matrix(m_top[,column_order]),top_annotation = ha,show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,col=coul,row_order = row_order,column_order = column_order)
+dev.off()
+png_file <- paste("Figures/heatmap_bailey_kTSP-orderd_mystic_allsubtyping_model",model_number,".png",sep="")
+png(png_file)
 Heatmap(as.matrix(m_top[,column_order]),top_annotation = ha,show_column_names=FALSE,show_row_names = TRUE,name="M-value" ,col=coul,row_order = row_order,column_order = column_order)
 dev.off()
