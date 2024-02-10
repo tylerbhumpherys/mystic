@@ -24,7 +24,7 @@ rownames(bailey_ind) <- names
 mystic2 <- s_Ranger(x=t(TCGA_ind), y=train_y, x.test=t(bailey_ind), 
                     y.test=test_y, n.trees = 10000, ipw = TRUE, 
                     ipw.case.weights =TRUE, ipw.class.weights = FALSE, 
-                    print.plot = TRUE, verbose=TRUE, probability = TRUE, 
+                    print.plot = FALSE, verbose=TRUE, probability = TRUE, 
                     autotune = TRUE, importance = "impurity")
 
 model_path <- paste0("Models/model", model_number, "_RF.RData")
