@@ -1,0 +1,149 @@
+---
+title: Model Results
+output:
+  pdf_document: default
+---
+
+```{r, echo=FALSE}
+library(ncvreg,warn.conflicts = F,quietly = T)
+library(caret,warn.conflicts = F,quietly = T)
+source("Scripts/utils.R")
+
+# get dependencies
+test_x <- loadRData("Source_data/bailey_X_DWMC1.1_07112022.RData")
+test_y <- loadRData("Generated_data/bailey_Y_DWMC1.1_07112022_refactor.RData")
+model1_ktsp <- loadRData("Models/model1_ktsp.RData")
+model2_ktsp <- loadRData("Models/model2_ktsp.RData")
+model3_ktsp <- loadRData("Models/model3_ktsp.RData")
+model4_ktsp <- loadRData("Models/model4_ktsp.RData")
+model1_RF <- loadRData("Models/model1_RF.RData")
+model2_RF <- loadRData("Models/model2_RF.RData")
+model3_RF <- loadRData("Models/model3_RF.RData")
+model4_RF <- loadRData("Models/model4_RF.RData")
+model1_PLR <- loadRData("Models/model1_PLR.RData")
+model2_PLR <- loadRData("Models/model2_PLR.RData")
+model3_PLR <- loadRData("Models/model3_PLR.RData")
+model4_PLR <- loadRData("Models/model4_PLR.RData")
+```
+
+## Model kTSP's
+```{r, echo=FALSE}
+# Extract vectors
+vector_model1 <- rownames(model1_ktsp$TSPs)
+vector_model2 <- rownames(model2_ktsp$TSPs)
+vector_model3 <- rownames(model3_ktsp$TSPs)
+vector_model4 <- rownames(model4_ktsp$TSPs)
+
+# Pad shorter vectors with NA to make them equal in length
+max_length <- max(length(vector_model1), length(vector_model2), length(vector_model3), length(vector_model4))
+
+vector_model1 <- c(vector_model1, rep(NA, max_length - length(vector_model1)))
+vector_model2 <- c(vector_model2, rep(NA, max_length - length(vector_model2)))
+vector_model3 <- c(vector_model3, rep(NA, max_length - length(vector_model3)))
+vector_model4 <- c(vector_model4, rep(NA, max_length - length(vector_model4)))
+
+# Create dataframe
+df <- data.frame(
+  model1_ktsps = vector_model1,
+  model2_ktsps = vector_model2,
+  model3_ktsps = vector_model3,
+  model4_ktsps = vector_model4
+)
+df
+```
+
+## Variable Importances 
+(sorted by RF variable importance)
+
+```{r, echo=FALSE}
+d1 <- as.data.frame(model1_RF$varimp)
+d1$model1_ktsps <- rownames(d1)
+colnames(d1) <- c("varimp(model1_RF)","model1_ktsps")
+rownames(d1) <- NULL
+d2 <- as.data.frame(coef(model1_PLR))
+d2$model1_ktsps <- rownames(d2)
+rownames(d2) <- NULL
+mer <- merge(d1,d2,by="model1_ktsps")
+mer[order(mer$`varimp(model1_RF)`,decreasing = T), ]
+
+d1 <- as.data.frame(model2_RF$varimp)
+d1$model2_ktsps <- rownames(d1)
+colnames(d1) <- c("varimp(model2_RF)","model2_ktsps")
+rownames(d1) <- NULL
+d2 <- as.data.frame(coef(model2_PLR))
+d2$model2_ktsps <- rownames(d2)
+rownames(d2) <- NULL
+mer <- merge(d1,d2,by="model2_ktsps")
+mer[order(mer$`varimp(model2_RF)`,decreasing = T), ]
+
+d1 <- as.data.frame(model3_RF$varimp)
+d1$model3_ktsps <- rownames(d1)
+colnames(d1) <- c("varimp(model3_RF)","model3_ktsps")
+rownames(d1) <- NULL
+d2 <- as.data.frame(coef(model3_PLR))
+d2$model3_ktsps <- rownames(d2)
+rownames(d2) <- NULL
+mer <- merge(d1,d2,by="model3_ktsps")
+mer[order(mer$`varimp(model3_RF)`,decreasing = T), ]
+
+d1 <- as.data.frame(model4_RF$varimp)
+d1$model4_ktsps <- rownames(d1)
+colnames(d1) <- c("varimp(model4_RF)","model4_ktsps")
+rownames(d1) <- NULL
+d2 <- as.data.frame(coef(model4_PLR))
+d2$model4_ktsps <- rownames(d2)
+rownames(d2) <- NULL
+mer <- merge(d1,d2,by="model4_ktsps")
+mer[order(mer$`varimp(model4_RF)`,decreasing = T), ]
+```
+
+## Random Forest Evaluation
+```{r, echo=FALSE}
+for (i in seq_along(c(model1_RF, model2_RF, model3_RF, model4_RF))) {
+  mod <- c(model1_RF, model2_RF, model3_RF, model4_RF)[[i]]
+  print(paste0("Results for RF model ", i,":"))
+  print(confusionMatrix(mod$predicted, test_y, positive = "1"))
+  print("-----------------------------------------------------")
+}
+```
+
+## Penalized Logistic Regression Evaluation
+```{r, echo=FALSE}
+print("Results for PLR model 1:")
+bailey_ind <- ind_fun(test_x,model1_ktsp)
+names <- gsub(",", "_", rownames(model1_ktsp$TSPs))
+rownames(bailey_ind) <- names
+preds <- predict(object=model1_PLR, X=t(bailey_ind), type="response",
+                 lambda=model1_PLR$lambda.min)
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(0,1))
+print(confusionMatrix(calls_basal, test_y, positive = "1"))
+print("-----------------------------------------------------")
+print("Results for PLR model 2:")
+bailey_ind <- ind_fun(test_x,model2_ktsp)
+names <- gsub(",", "_", rownames(model2_ktsp$TSPs))
+rownames(bailey_ind) <- names
+preds <- predict(object=model2_PLR, X=t(bailey_ind), type="response",
+                 lambda=model2_PLR$lambda.min)
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(0,1))
+print(confusionMatrix(calls_basal, test_y, positive = "1"))
+print("-----------------------------------------------------")
+print("Results for PLR model 3:")
+bailey_ind <- ind_fun(test_x,model3_ktsp)
+names <- gsub(",", "_", rownames(model3_ktsp$TSPs))
+rownames(bailey_ind) <- names
+preds <- predict(object=model3_PLR, X=t(bailey_ind), type="response",
+                 lambda=model3_PLR$lambda.min)
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(0,1))
+print(confusionMatrix(calls_basal, test_y, positive = "1"))
+print("-----------------------------------------------------")
+print("Results for PLR model 4:")
+bailey_ind <- ind_fun(test_x,model4_ktsp)
+names <- gsub(",", "_", rownames(model4_ktsp$TSPs))
+rownames(bailey_ind) <- names
+preds <- predict(object=model4_PLR, X=t(bailey_ind), type="response",
+                 lambda=model4_PLR$lambda.min)
+calls_basal <- factor(ifelse(preds>0.5,1,0), levels = c(0,1))
+print(confusionMatrix(calls_basal, test_y, positive = "1"))
+print("-----------------------------------------------------")
+```
+
