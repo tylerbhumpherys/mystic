@@ -20,7 +20,7 @@ Now, within the cloned repository, build all the project artifacts and the resul
 
 Longleaf:
 ```
-sbatch Scripts/run.sh
+sbatch Scripts/run_longleaf.sh
 ```
 or not on Longleaf:
 ```
